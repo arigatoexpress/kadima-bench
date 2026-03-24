@@ -1,0 +1,42 @@
+# kadima-bench default configuration
+# Kadima Digital Laboratories
+
+[general]
+output_dir = "."
+gpu_isolation = true
+gpu_monitor = true
+
+[hardware]
+lab = "Kadima Digital Laboratories"
+cpu = "AMD Ryzen 9 9900X3D 12-Core"
+gpu = "NVIDIA GeForce RTX 5070 Ti (16GB GDDR7)"
+ram = "64GB DDR5"
+motherboard = "ASUS ROG STRIX B850-A GAMING WIFI"
+storage = "Samsung 990 EVO Plus 2TB NVMe"
+os = "Windows 11 Pro"
+inference_engine = "Ollama"
+
+[backend]
+type = "ollama"
+base_url = "http://localhost:11434"
+timeout = 120
+
+[models]
+# Leave empty to auto-discover all models under 16GB
+# Or specify models explicitly:
+# include = ["nemotron-3-nano:4b", "phi4:14b", "gemma3:4b"]
+
+[suite]
+preset = "quick"
+custom_tests = true
+speed_tests = true
+speed_repeats = 3
+lm_eval = false
+lm_eval_tasks = ["mmlu", "gsm8k", "hellaswag", "arc_challenge"]
+lm_eval_limit = 100
+lm_eval_fewshot = 5
+
+[scoring]
+quality_weight = 0.5
+speed_weight = 0.3
+efficiency_weight = 0.2
