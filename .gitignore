@@ -11,3 +11,4 @@ venv/
 results/
 *.json
 !configs/*.toml
+kadima_bench.egg-info/
