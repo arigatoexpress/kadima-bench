@@ -65,8 +65,8 @@ def chart1_leaderboard(data, hardware, output_dir):
 
     date = data["metadata"]["date"][:10]
     fig.suptitle("Local LLM Benchmark — Overall Leaderboard",
-                 fontsize=22, fontweight="bold", color=COLORS["text"], y=0.97)
-    fig.text(0.5, 0.935,
+                 fontsize=22, fontweight="bold", color=COLORS["text"], y=1.0)
+    fig.text(0.5, 0.96,
              f"{n} Models  |  8 Tests + Streaming Latency  |  GPU-Isolated  |  {date}",
              fontsize=12, color=COLORS["text_dim"], ha="center")
 
@@ -126,10 +126,10 @@ def chart1_leaderboard(data, hardware, output_dir):
     # Legend
     handles = make_legend_handles(families)
     fig.legend(handles=handles, loc="upper center", ncol=min(len(set(families)), 8),
-               bbox_to_anchor=(0.5, 0.915), fontsize=11, framealpha=0.3, edgecolor=COLORS["border"])
+               bbox_to_anchor=(0.5, 0.94), fontsize=10, framealpha=0.3, edgecolor=COLORS["border"])
 
     add_branding(fig, hardware)
-    plt.tight_layout(rect=[0, 0.03, 1, 0.88])
+    plt.tight_layout(rect=[0, 0.03, 1, 0.90])
     path = os.path.join(output_dir, "kadima_1_leaderboard.png")
     fig.savefig(path, dpi=200, bbox_inches="tight", facecolor=COLORS["bg"])
     plt.close()
@@ -148,8 +148,8 @@ def chart2_efficiency_frontier(data, hardware, output_dir):
 
     fig, ax = plt.subplots(figsize=(16, 11))
     fig.suptitle("Efficiency Frontier — Speed vs. Accuracy",
-                 fontsize=22, fontweight="bold", color=COLORS["text"], y=0.97)
-    fig.text(0.5, 0.935,
+                 fontsize=22, fontweight="bold", color=COLORS["text"], y=1.0)
+    fig.text(0.5, 0.96,
              "Top-right = ideal  |  Stars = Pareto-optimal  |  Bubble size = model size on disk",
              fontsize=12, color=COLORS["text_dim"], ha="center")
 
@@ -211,50 +211,56 @@ def chart2_efficiency_frontier(data, hardware, output_dir):
 
 
 def _place_labels(ax, results, speeds, accs):
-    """Place labels without overlap using iterative repulsion."""
+    """Place labels without overlap using multi-pass repulsion."""
     x_range = max(speeds) - min(speeds) if len(set(speeds)) > 1 else 100
     y_range = max(accs) - min(accs) if len(set(accs)) > 1 else 30
 
-    # Collect label positions with initial offsets
-    labels_info = []
-    for r in results:
-        labels_info.append({
-            "text": r["label"],
-            "x": r["avg_tokens_per_second"],
-            "y": r["accuracy_pct"],
-            "ox": 15,  # pixel offset x
-            "oy": -10, # pixel offset y
-            "ha": "left",
-        })
+    # Sort by x position so we can stagger left-to-right within clusters
+    indexed = sorted(enumerate(results), key=lambda t: t[1]["avg_tokens_per_second"])
 
-    # Check for vertical clusters (same accuracy) and stagger
-    for i, li in enumerate(labels_info):
-        for j, lj in enumerate(labels_info):
-            if i >= j:
-                continue
-            # If models are at similar accuracy, stagger vertically
-            if abs(li["y"] - lj["y"]) < y_range * 0.06:
-                if abs(li["x"] - lj["x"]) < x_range * 0.25:
-                    # Push one up, one down
-                    li["oy"] = 12
-                    lj["oy"] = -16
-                    # If they're also close horizontally, flip one to the left
-                    if abs(li["x"] - lj["x"]) < x_range * 0.12:
-                        if li["x"] > lj["x"]:
-                            lj["ox"] = -15
-                            lj["ha"] = "right"
-                        else:
-                            li["ox"] = -15
-                            li["ha"] = "right"
+    labels_info = [None] * len(results)
 
-    # Render
+    # Offset options: (oy_pixels, ox_pixels, ha)
+    # Cycle through these for models in the same accuracy band
+    offsets_cycle = [
+        (14, 15, "left"),     # above-right
+        (-18, 15, "left"),    # below-right
+        (14, -15, "right"),   # above-left
+        (-18, -15, "right"),  # below-left
+        (26, 0, "center"),    # far above
+        (-30, 0, "center"),   # far below
+    ]
+
+    # Group by accuracy band (within 5% = same cluster)
+    clusters = {}
+    for orig_i, r in indexed:
+        band = round(r["accuracy_pct"] / 5) * 5
+        clusters.setdefault(band, []).append(orig_i)
+
+    for band, members in clusters.items():
+        for slot, orig_i in enumerate(members):
+            r = results[orig_i]
+            oy, ox, ha = offsets_cycle[slot % len(offsets_cycle)]
+            # Singletons just go to the right
+            if len(members) == 1:
+                ox, oy, ha = 15, -8, "left"
+            labels_info[orig_i] = {
+                "text": r["label"],
+                "x": r["avg_tokens_per_second"],
+                "y": r["accuracy_pct"],
+                "ox": ox, "oy": oy, "ha": ha,
+            }
+
+    # Render with connector lines
     for li in labels_info:
+        if li is None:
+            continue
         ax.annotate(
             li["text"], (li["x"], li["y"]),
             xytext=(li["ox"], li["oy"]), textcoords="offset points",
-            fontsize=10, color=COLORS["text"], alpha=0.95,
+            fontsize=9.5, color=COLORS["text"], alpha=0.95,
             ha=li["ha"], fontweight="bold",
-            arrowprops=dict(arrowstyle="-", color=COLORS["text_dim"], alpha=0.3, lw=0.8),
+            arrowprops=dict(arrowstyle="-", color=COLORS["text_dim"], alpha=0.4, lw=0.8),
         )
 
 
@@ -278,14 +284,14 @@ def chart3_pass_fail_matrix(data, hardware, output_dir):
 
     fig, ax = plt.subplots(figsize=(16, max(7, n_models * 0.75)))
     fig.suptitle("Test Category Breakdown — Pass/Fail Matrix",
-                 fontsize=22, fontweight="bold", color=COLORS["text"], y=0.97)
+                 fontsize=22, fontweight="bold", color=COLORS["text"], y=1.0)
 
     # Count failures per category for subtitle insight
     fail_counts = n_models - matrix.sum(axis=0)
     hardest_idx = np.argmax(fail_counts)
     hardest = categories[hardest_idx] if fail_counts[hardest_idx] > 0 else None
     insight = f"Hardest test: {hardest} ({int(fail_counts[hardest_idx])}/{n_models} models failed)" if hardest else "All models passed every test"
-    fig.text(0.5, 0.935, insight,
+    fig.text(0.5, 0.96, insight,
              fontsize=12, color=COLORS["accent4"], ha="center", fontweight="bold")
 
     cmap = ListedColormap(["#DC3545", "#28A745"])
@@ -347,15 +353,15 @@ def chart4_latency_deep_dive(data, hardware, output_dir):
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, max(8, n * 0.75)),
                                     gridspec_kw={"width_ratios": [1, 1.3]})
     fig.suptitle("Latency Deep Dive — Time to First Token & Inter-Token Latency",
-                 fontsize=22, fontweight="bold", color=COLORS["text"], y=0.97)
+                 fontsize=20, fontweight="bold", color=COLORS["text"], y=1.0)
 
     # Find the fastest TTFT for insight callout
     fastest = models_with_speed[0]
     slowest = models_with_speed[-1]
-    fig.text(0.5, 0.935,
+    fig.text(0.5, 0.96,
              f"Fastest first response: {fastest['label']} ({fastest['speed_metrics']['ttft_ms']:.0f}ms)"
              f"  |  Slowest: {slowest['label']} ({slowest['speed_metrics']['ttft_ms']:.0f}ms)",
-             fontsize=12, color=COLORS["text_dim"], ha="center")
+             fontsize=11, color=COLORS["text_dim"], ha="center")
 
     # LEFT: TTFT horizontal bars (sorted ascending = fastest at top)
     ttfts = [r["speed_metrics"]["ttft_ms"] for r in models_with_speed]
@@ -420,17 +426,17 @@ def chart5_speed_heatmap(data, hardware, output_dir):
     matrix = np.array([[tr.get("tokens_per_second", 0)
                          for tr in r["test_results"]] for r in results])
 
-    fig, ax = plt.subplots(figsize=(18, max(8, n_models * 0.75)))
+    fig, ax = plt.subplots(figsize=(18, max(9, n_models * 0.85)))
     fig.suptitle("Inference Speed by Test Category",
-                 fontsize=22, fontweight="bold", color=COLORS["text"], y=0.97)
+                 fontsize=22, fontweight="bold", color=COLORS["text"], y=1.02)
 
     # Insight: find the speed champion
     avg_speeds = [r["avg_tokens_per_second"] for r in results]
     fastest_idx = np.argmax(avg_speeds)
-    fig.text(0.5, 0.935,
+    fig.text(0.5, 0.98,
              f"Fastest overall: {results[fastest_idx]['label']} ({avg_speeds[fastest_idx]:.0f} t/s avg)"
              f"  |  Values in tokens/second  |  Darker green = faster",
-             fontsize=12, color=COLORS["text_dim"], ha="center")
+             fontsize=11, color=COLORS["text_dim"], ha="center")
 
     im = ax.imshow(matrix, cmap="YlGn", aspect="auto", vmin=0)
     ax.set_xticks(np.arange(n_cats))
@@ -460,7 +466,7 @@ def chart5_speed_heatmap(data, hardware, output_dir):
     for j in range(n_cats + 1):
         ax.axvline(j - 0.5, color=COLORS["bg"], linewidth=2.5)
 
-    cbar = fig.colorbar(im, ax=ax, shrink=0.5, pad=0.12)
+    cbar = fig.colorbar(im, ax=ax, shrink=0.4, pad=0.18)
     cbar.set_label("Tokens/second", color=COLORS["text"], fontsize=11)
     cbar.ax.yaxis.set_tick_params(color=COLORS["text_dim"])
     plt.setp(plt.getp(cbar.ax.axes, "yticklabels"), color=COLORS["text_dim"])
@@ -485,8 +491,8 @@ def chart6_composite_breakdown(data, hardware, output_dir):
     n = len(results)
     fig, ax = plt.subplots(figsize=(18, max(8, n * 0.75)))
     fig.suptitle("Composite Score Breakdown — What Drives Each Model's Ranking",
-                 fontsize=22, fontweight="bold", color=COLORS["text"], y=0.97)
-    fig.text(0.5, 0.935,
+                 fontsize=22, fontweight="bold", color=COLORS["text"], y=1.0)
+    fig.text(0.5, 0.96,
              f"Scoring: Quality {weights.get('quality', 0.5):.0%}"
              f" + Speed {weights.get('speed', 0.3):.0%}"
              f" + Efficiency {weights.get('efficiency', 0.2):.0%}"
@@ -553,20 +559,20 @@ def chart7_energy_and_vram(data, hardware, output_dir):
     labels = [r["label"] for r in models_with_gpu]
     colors = [get_family_color(r["family"]) for r in models_with_gpu]
 
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, max(8, n * 0.75)),
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, max(9, n * 0.85)),
                                     gridspec_kw={"width_ratios": [1, 1]})
     fig.suptitle("GPU Resource Usage — VRAM Footprint & Power Consumption",
-                 fontsize=22, fontweight="bold", color=COLORS["text"], y=0.97)
+                 fontsize=22, fontweight="bold", color=COLORS["text"], y=1.02)
 
     # Insight callout
     most_efficient = min(models_with_gpu,
                          key=lambda r: r["gpu_snapshot"]["avg_power_w"] / max(r.get("avg_tokens_per_second", 1), 1))
     eff_watts_per_tok = most_efficient["gpu_snapshot"]["avg_power_w"] / max(most_efficient.get("avg_tokens_per_second", 1), 1)
-    fig.text(0.5, 0.935,
+    fig.text(0.5, 0.98,
              f"Most power-efficient: {most_efficient['label']}"
              f" ({eff_watts_per_tok:.2f} watts per token/s)"
              f"  |  16GB VRAM budget line shown",
-             fontsize=12, color=COLORS["text_dim"], ha="center")
+             fontsize=11, color=COLORS["text_dim"], ha="center")
 
     # LEFT: VRAM usage
     y_pos = np.arange(n)
@@ -575,7 +581,7 @@ def chart7_energy_and_vram(data, hardware, output_dir):
     ax1.set_yticks(y_pos)
     ax1.set_yticklabels(labels, fontsize=11)
     ax1.set_xlabel("Peak VRAM Usage (GB)", fontsize=12, labelpad=8)
-    ax1.set_title("Peak VRAM Usage\n(lower = more headroom for context)", fontsize=13, fontweight="bold", pad=12)
+    ax1.set_title("Peak VRAM Usage\n(lower = more headroom for context)", fontsize=12, fontweight="bold", pad=18)
     ax1.grid(axis="x", alpha=0.3)
 
     # 16GB budget line
@@ -591,25 +597,43 @@ def chart7_energy_and_vram(data, hardware, output_dir):
     powers = [r["gpu_snapshot"]["avg_power_w"] for r in models_with_gpu]
     throughputs = [r.get("avg_tokens_per_second", 0) for r in models_with_gpu]
 
+    # Plot bubbles first, then labels with repulsion
     for i, r in enumerate(models_with_gpu):
         size = max(r.get("model_size_gb", 2) * 80, 100)
         ax2.scatter(powers[i], throughputs[i], s=size, c=colors[i],
                     alpha=0.85, edgecolors="white", linewidth=1.2, zorder=5)
-        # Label with offset based on position
-        ox = 8 if powers[i] < np.median(powers) else -8
-        ha = "left" if ox > 0 else "right"
+
+    # Smart label placement for power vs throughput scatter
+    placed = []
+    for i, r in enumerate(models_with_gpu):
+        # Try multiple offset positions and pick one that doesn't collide
+        candidates = [(10, 8, "left"), (-10, 8, "right"), (10, -12, "left"), (-10, -12, "right"),
+                      (0, 16, "center"), (0, -18, "center")]
+        best_ox, best_oy, best_ha = candidates[0]
+        for ox, oy, ha in candidates:
+            collision = False
+            for px, py, pox, poy in placed:
+                dx = (powers[i] - px) / max(max(powers) - min(powers), 1) * 100
+                dy = (throughputs[i] - py) / max(max(throughputs) - min(throughputs), 1) * 100
+                if abs(dx + ox - pox) < 12 and abs(dy + oy - poy) < 12:
+                    collision = True
+                    break
+            if not collision:
+                best_ox, best_oy, best_ha = ox, oy, ha
+                break
+        placed.append((powers[i], throughputs[i], best_ox, best_oy))
         ax2.annotate(r["label"], (powers[i], throughputs[i]),
-                     xytext=(ox, 5), textcoords="offset points",
-                     fontsize=9, color=COLORS["text"], fontweight="bold", ha=ha,
+                     xytext=(best_ox, best_oy), textcoords="offset points",
+                     fontsize=8.5, color=COLORS["text"], fontweight="bold", ha=best_ha,
                      arrowprops=dict(arrowstyle="-", color=COLORS["text_dim"], alpha=0.3, lw=0.5))
 
     ax2.set_xlabel("Average Power Draw (watts)", fontsize=12, labelpad=8)
     ax2.set_ylabel("Throughput (tokens/s)", fontsize=12, labelpad=8)
-    ax2.set_title("Power vs. Throughput\n(top-left = most power efficient)", fontsize=13, fontweight="bold", pad=12)
+    ax2.set_title("Power vs. Throughput\n(top-left = most power efficient)", fontsize=12, fontweight="bold", pad=18)
     ax2.grid(True, alpha=0.2)
 
     add_branding(fig, hardware)
-    plt.tight_layout(rect=[0, 0.03, 1, 0.91])
+    plt.tight_layout(rect=[0, 0.03, 1, 0.93])
     path = os.path.join(output_dir, "kadima_7_energy_vram.png")
     fig.savefig(path, dpi=200, bbox_inches="tight", facecolor=COLORS["bg"])
     plt.close()
