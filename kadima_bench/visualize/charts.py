@@ -129,7 +129,7 @@ def chart1_leaderboard(data, hardware, output_dir):
                bbox_to_anchor=(0.5, 0.94), fontsize=10, framealpha=0.3, edgecolor=COLORS["border"])
 
     add_branding(fig, hardware)
-    plt.tight_layout(rect=[0, 0.03, 1, 0.90])
+    plt.tight_layout(rect=[0, 0.03, 1, 0.96])
     path = os.path.join(output_dir, "kadima_1_leaderboard.png")
     fig.savefig(path, dpi=200, bbox_inches="tight", facecolor=COLORS["bg"])
     plt.close()
@@ -203,7 +203,7 @@ def chart2_efficiency_frontier(data, hardware, output_dir):
               edgecolor=COLORS["border"])
 
     add_branding(fig, hardware)
-    plt.tight_layout(rect=[0, 0.03, 1, 0.91])
+    plt.tight_layout(rect=[0, 0.03, 1, 0.96])
     path = os.path.join(output_dir, "kadima_2_efficiency_frontier.png")
     fig.savefig(path, dpi=200, bbox_inches="tight", facecolor=COLORS["bg"])
     plt.close()
@@ -323,7 +323,7 @@ def chart3_pass_fail_matrix(data, hardware, output_dir):
         ax.axvline(j - 0.5, color=COLORS["bg"], linewidth=2.5)
 
     add_branding(fig, hardware)
-    plt.tight_layout(rect=[0, 0.03, 1, 0.91])
+    plt.tight_layout(rect=[0, 0.03, 1, 0.96])
     path = os.path.join(output_dir, "kadima_3_pass_fail.png")
     fig.savefig(path, dpi=200, bbox_inches="tight", facecolor=COLORS["bg"])
     plt.close()
@@ -400,7 +400,7 @@ def chart4_latency_deep_dive(data, hardware, output_dir):
                  va="center", fontsize=9, color=COLORS["text_dim"])
 
     add_branding(fig, hardware)
-    plt.tight_layout(rect=[0, 0.03, 1, 0.91])
+    plt.tight_layout(rect=[0, 0.03, 1, 0.96])
     path = os.path.join(output_dir, "kadima_4_latency.png")
     fig.savefig(path, dpi=200, bbox_inches="tight", facecolor=COLORS["bg"])
     plt.close()
@@ -472,7 +472,7 @@ def chart5_speed_heatmap(data, hardware, output_dir):
     plt.setp(plt.getp(cbar.ax.axes, "yticklabels"), color=COLORS["text_dim"])
 
     add_branding(fig, hardware)
-    plt.tight_layout(rect=[0, 0.03, 1, 0.91])
+    plt.tight_layout(rect=[0, 0.03, 1, 0.96])
     path = os.path.join(output_dir, "kadima_5_speed_heatmap.png")
     fig.savefig(path, dpi=200, bbox_inches="tight", facecolor=COLORS["bg"])
     plt.close()
@@ -532,7 +532,7 @@ def chart6_composite_breakdown(data, hardware, output_dir):
                 va="center", fontsize=11, fontweight="bold", color=COLORS["text"])
 
     add_branding(fig, hardware)
-    plt.tight_layout(rect=[0, 0.03, 1, 0.91])
+    plt.tight_layout(rect=[0, 0.03, 1, 0.96])
     path = os.path.join(output_dir, "kadima_6_composite.png")
     fig.savefig(path, dpi=200, bbox_inches="tight", facecolor=COLORS["bg"])
     plt.close()
@@ -633,7 +633,7 @@ def chart7_energy_and_vram(data, hardware, output_dir):
     ax2.grid(True, alpha=0.2)
 
     add_branding(fig, hardware)
-    plt.tight_layout(rect=[0, 0.03, 1, 0.93])
+    plt.tight_layout(rect=[0, 0.03, 1, 0.96])
     path = os.path.join(output_dir, "kadima_7_energy_vram.png")
     fig.savefig(path, dpi=200, bbox_inches="tight", facecolor=COLORS["bg"])
     plt.close()
