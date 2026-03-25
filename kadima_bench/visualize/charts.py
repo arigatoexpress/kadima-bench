@@ -65,8 +65,8 @@ def chart1_leaderboard(data, hardware, output_dir):
 
     date = data["metadata"]["date"][:10]
     fig.suptitle("Local LLM Benchmark — Overall Leaderboard",
-                 fontsize=22, fontweight="bold", color=COLORS["text"], y=1.0)
-    fig.text(0.5, 0.96,
+                 fontsize=22, fontweight="bold", color=COLORS["text"], y=1.05)
+    fig.text(0.5, 1.01,
              f"{n} Models  |  8 Tests + Streaming Latency  |  GPU-Isolated  |  {date}",
              fontsize=12, color=COLORS["text_dim"], ha="center")
 
@@ -126,10 +126,10 @@ def chart1_leaderboard(data, hardware, output_dir):
     # Legend
     handles = make_legend_handles(families)
     fig.legend(handles=handles, loc="upper center", ncol=min(len(set(families)), 8),
-               bbox_to_anchor=(0.5, 0.94), fontsize=10, framealpha=0.3, edgecolor=COLORS["border"])
+               bbox_to_anchor=(0.5, 0.99), fontsize=10, framealpha=0.3, edgecolor=COLORS["border"])
 
     add_branding(fig, hardware)
-    plt.tight_layout(rect=[0, 0.03, 1, 0.90])
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
     path = os.path.join(output_dir, "kadima_1_leaderboard.png")
     fig.savefig(path, dpi=200, bbox_inches="tight", facecolor=COLORS["bg"])
     plt.close()
@@ -148,8 +148,8 @@ def chart2_efficiency_frontier(data, hardware, output_dir):
 
     fig, ax = plt.subplots(figsize=(16, 11))
     fig.suptitle("Efficiency Frontier — Speed vs. Accuracy",
-                 fontsize=22, fontweight="bold", color=COLORS["text"], y=1.0)
-    fig.text(0.5, 0.96,
+                 fontsize=22, fontweight="bold", color=COLORS["text"], y=1.05)
+    fig.text(0.5, 1.01,
              "Top-right = ideal  |  Stars = Pareto-optimal  |  Bubble size = model size on disk",
              fontsize=12, color=COLORS["text_dim"], ha="center")
 
@@ -203,7 +203,7 @@ def chart2_efficiency_frontier(data, hardware, output_dir):
               edgecolor=COLORS["border"])
 
     add_branding(fig, hardware)
-    plt.tight_layout(rect=[0, 0.03, 1, 0.91])
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
     path = os.path.join(output_dir, "kadima_2_efficiency_frontier.png")
     fig.savefig(path, dpi=200, bbox_inches="tight", facecolor=COLORS["bg"])
     plt.close()
@@ -284,14 +284,14 @@ def chart3_pass_fail_matrix(data, hardware, output_dir):
 
     fig, ax = plt.subplots(figsize=(16, max(7, n_models * 0.75)))
     fig.suptitle("Test Category Breakdown — Pass/Fail Matrix",
-                 fontsize=22, fontweight="bold", color=COLORS["text"], y=1.0)
+                 fontsize=22, fontweight="bold", color=COLORS["text"], y=1.05)
 
     # Count failures per category for subtitle insight
     fail_counts = n_models - matrix.sum(axis=0)
     hardest_idx = np.argmax(fail_counts)
     hardest = categories[hardest_idx] if fail_counts[hardest_idx] > 0 else None
     insight = f"Hardest test: {hardest} ({int(fail_counts[hardest_idx])}/{n_models} models failed)" if hardest else "All models passed every test"
-    fig.text(0.5, 0.96, insight,
+    fig.text(0.5, 1.01, insight,
              fontsize=12, color=COLORS["accent4"], ha="center", fontweight="bold")
 
     cmap = ListedColormap(["#DC3545", "#28A745"])
@@ -323,7 +323,7 @@ def chart3_pass_fail_matrix(data, hardware, output_dir):
         ax.axvline(j - 0.5, color=COLORS["bg"], linewidth=2.5)
 
     add_branding(fig, hardware)
-    plt.tight_layout(rect=[0, 0.03, 1, 0.91])
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
     path = os.path.join(output_dir, "kadima_3_pass_fail.png")
     fig.savefig(path, dpi=200, bbox_inches="tight", facecolor=COLORS["bg"])
     plt.close()
@@ -353,12 +353,12 @@ def chart4_latency_deep_dive(data, hardware, output_dir):
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, max(8, n * 0.75)),
                                     gridspec_kw={"width_ratios": [1, 1.3]})
     fig.suptitle("Latency Deep Dive — Time to First Token & Inter-Token Latency",
-                 fontsize=20, fontweight="bold", color=COLORS["text"], y=1.0)
+                 fontsize=20, fontweight="bold", color=COLORS["text"], y=1.05)
 
     # Find the fastest TTFT for insight callout
     fastest = models_with_speed[0]
     slowest = models_with_speed[-1]
-    fig.text(0.5, 0.96,
+    fig.text(0.5, 1.01,
              f"Fastest first response: {fastest['label']} ({fastest['speed_metrics']['ttft_ms']:.0f}ms)"
              f"  |  Slowest: {slowest['label']} ({slowest['speed_metrics']['ttft_ms']:.0f}ms)",
              fontsize=11, color=COLORS["text_dim"], ha="center")
@@ -400,7 +400,7 @@ def chart4_latency_deep_dive(data, hardware, output_dir):
                  va="center", fontsize=9, color=COLORS["text_dim"])
 
     add_branding(fig, hardware)
-    plt.tight_layout(rect=[0, 0.03, 1, 0.91])
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
     path = os.path.join(output_dir, "kadima_4_latency.png")
     fig.savefig(path, dpi=200, bbox_inches="tight", facecolor=COLORS["bg"])
     plt.close()
@@ -428,12 +428,12 @@ def chart5_speed_heatmap(data, hardware, output_dir):
 
     fig, ax = plt.subplots(figsize=(18, max(9, n_models * 0.85)))
     fig.suptitle("Inference Speed by Test Category",
-                 fontsize=22, fontweight="bold", color=COLORS["text"], y=1.02)
+                 fontsize=22, fontweight="bold", color=COLORS["text"], y=1.05)
 
     # Insight: find the speed champion
     avg_speeds = [r["avg_tokens_per_second"] for r in results]
     fastest_idx = np.argmax(avg_speeds)
-    fig.text(0.5, 0.98,
+    fig.text(0.5, 1.01,
              f"Fastest overall: {results[fastest_idx]['label']} ({avg_speeds[fastest_idx]:.0f} t/s avg)"
              f"  |  Values in tokens/second  |  Darker green = faster",
              fontsize=11, color=COLORS["text_dim"], ha="center")
@@ -472,7 +472,7 @@ def chart5_speed_heatmap(data, hardware, output_dir):
     plt.setp(plt.getp(cbar.ax.axes, "yticklabels"), color=COLORS["text_dim"])
 
     add_branding(fig, hardware)
-    plt.tight_layout(rect=[0, 0.03, 1, 0.91])
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
     path = os.path.join(output_dir, "kadima_5_speed_heatmap.png")
     fig.savefig(path, dpi=200, bbox_inches="tight", facecolor=COLORS["bg"])
     plt.close()
@@ -491,8 +491,8 @@ def chart6_composite_breakdown(data, hardware, output_dir):
     n = len(results)
     fig, ax = plt.subplots(figsize=(18, max(8, n * 0.75)))
     fig.suptitle("Composite Score Breakdown — What Drives Each Model's Ranking",
-                 fontsize=22, fontweight="bold", color=COLORS["text"], y=1.0)
-    fig.text(0.5, 0.96,
+                 fontsize=22, fontweight="bold", color=COLORS["text"], y=1.05)
+    fig.text(0.5, 1.01,
              f"Scoring: Quality {weights.get('quality', 0.5):.0%}"
              f" + Speed {weights.get('speed', 0.3):.0%}"
              f" + Efficiency {weights.get('efficiency', 0.2):.0%}"
@@ -532,7 +532,7 @@ def chart6_composite_breakdown(data, hardware, output_dir):
                 va="center", fontsize=11, fontweight="bold", color=COLORS["text"])
 
     add_branding(fig, hardware)
-    plt.tight_layout(rect=[0, 0.03, 1, 0.91])
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
     path = os.path.join(output_dir, "kadima_6_composite.png")
     fig.savefig(path, dpi=200, bbox_inches="tight", facecolor=COLORS["bg"])
     plt.close()
@@ -562,13 +562,13 @@ def chart7_energy_and_vram(data, hardware, output_dir):
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, max(9, n * 0.85)),
                                     gridspec_kw={"width_ratios": [1, 1]})
     fig.suptitle("GPU Resource Usage — VRAM Footprint & Power Consumption",
-                 fontsize=22, fontweight="bold", color=COLORS["text"], y=1.02)
+                 fontsize=22, fontweight="bold", color=COLORS["text"], y=1.05)
 
     # Insight callout
     most_efficient = min(models_with_gpu,
                          key=lambda r: r["gpu_snapshot"]["avg_power_w"] / max(r.get("avg_tokens_per_second", 1), 1))
     eff_watts_per_tok = most_efficient["gpu_snapshot"]["avg_power_w"] / max(most_efficient.get("avg_tokens_per_second", 1), 1)
-    fig.text(0.5, 0.98,
+    fig.text(0.5, 1.01,
              f"Most power-efficient: {most_efficient['label']}"
              f" ({eff_watts_per_tok:.2f} watts per token/s)"
              f"  |  16GB VRAM budget line shown",
@@ -633,7 +633,7 @@ def chart7_energy_and_vram(data, hardware, output_dir):
     ax2.grid(True, alpha=0.2)
 
     add_branding(fig, hardware)
-    plt.tight_layout(rect=[0, 0.03, 1, 0.93])
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
     path = os.path.join(output_dir, "kadima_7_energy_vram.png")
     fig.savefig(path, dpi=200, bbox_inches="tight", facecolor=COLORS["bg"])
     plt.close()
